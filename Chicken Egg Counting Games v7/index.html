@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>เกมนับ ไก่ ไข่ มหาสนุก - ครูขันทอง โพธิ์เตี้ย</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kodchasan:wght@600;700&family=Sarabun:wght@600;800&family=Chonburi&display=swap" rel="stylesheet">
+    <style>
+        * { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Kodchasan', sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; background: #81D4FA; touch-action: manipulation; }
+        .sky-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -10; background: linear-gradient(to bottom, #29B6F6 0%, #B3E5FC 70%, #E1F5FE 100%); }
+        .hill-far { position: fixed; bottom: 0; left: -10%; width: 120%; height: 45%; background: #9CCC65; border-radius: 100% 100% 0 0; z-index: -5; }
+        .hill-near { position: fixed; bottom: -10%; right: -10%; width: 110%; height: 40%; background: #7CB342; border-radius: 100% 100% 0 0; z-index: -4; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); }
+        header { text-align: center; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); padding: 15px; border-radius: 25px; border: 3px solid white; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px; width: 90%; max-width: 800px; position: relative; z-index: 10; }
+        .school-logo { width: 70px; height: auto; margin-bottom: 5px; }
+        .school-name { font-family: 'Sarabun'; font-size: 22px; font-weight: 900; color: #1B5E20; margin: 0; }
+        .teacher-info { font-size: 18px; font-weight: 800; color: #333; margin: 2px 0; }
+        .game-title { font-family: 'Chonburi'; font-size: 32px; color: #0D47A1; -webkit-text-stroke: 1.5px #2E7D32; text-shadow: 3px 3px 0px rgba(0, 33, 113, 0.2); margin-top: 5px; }
+        #level-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 9999; text-align: center; }
+        .intro-title { font-family: 'Chonburi'; font-size: 42px; color: #FFEB3B; -webkit-text-stroke: 1px #0D47A1; margin-bottom: 20px; line-height: 1.2; padding: 0 20px; }
+        .level-btn { width: 280px; padding: 22px; margin: 12px; font-size: 26px; border-radius: 50px; border: none; cursor: pointer; font-weight: 800; box-shadow: 0 8px 0 rgba(0,0,0,0.3); }
+        .btn-k { background: #FFEB3B; color: #E65100; }
+        .btn-p { background: #4CAF50; color: white; }
+        .game-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(8px); border-radius: 30px; padding: 15px; flex: 1; min-width: 310px; display: flex; flex-direction: column; align-items: center; border: 4px solid white; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 10px; position: relative; }
+        .cloud-number { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M18.42 9.22a5.98 5.98 0 0 0-9.84-2.7 6 6 0 0 0-8.58 5.48h.01A6 6 0 0 0 6 18h12a6 6 0 0 0 .42-11.98z"/></svg>'); background-repeat: no-repeat; background-size: contain; background-position: center; width: 150px; height: 90px; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: 900; color: #01579B; text-align: center; }
+        .spawner { cursor: pointer; padding: 5px; transition: transform 0.1s; z-index: 20; }
+        .spawner:active { transform: scale(0.9); }
+        .spawner img { width: 90px; height: auto; pointer-events: none; }
+        .zone-wrapper { display: flex; align-items: center; gap: 10px; width: 100%; justify-content: center; margin-top: 10px; }
+        .drop-zone { width: 210px; min-height: 130px; background-size: contain; background-repeat: no-repeat; background-position: center bottom; display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; background-color: rgba(255,255,255,0.4); border-radius: 20px; padding: 10px; z-index: 5; }
+        .btn-undo { width: 50px; height: 50px; background: #FF5252; color: white; border-radius: 15px; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 5px 0 #D32F2F; z-index: 30; }
+        .btn-check { background: linear-gradient(to bottom, #66BB6A, #388E3C); color: white; border: none; padding: 12px 40px; border-radius: 50px; font-size: 22px; font-weight: bold; cursor: pointer; box-shadow: 0 6px 0 #1B5E20; margin-top: 15px; z-index: 30; }
+        #victory-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 10000; }
+        .item-small { width: 42px; height: 42px; margin: 2px; position: relative; z-index: 6; }
+        #change-level-container { margin-top: 20px; display: none; z-index: 50; }
+        .btn-switch { background: #FB8C00; color: white; border: none; padding: 15px 30px; border-radius: 30px; font-weight: bold; font-size: 20px; cursor: pointer; box-shadow: 0 6px 0 #E65100; }
+    </style>
+</head>
+<body>
+    <div class="sky-bg"></div><div class="hill-far"></div><div class="hill-near"></div>
+    <audio id="bgMusic" src="bg.mp3" loop></audio>
+
+    <div id="level-overlay">
+        <div class="intro-title">เกม นับ ไก่ ไข่ มหาสนุก</div>
+        <h2 style="color:white; margin-bottom: 30px;">เลือกด่านที่ต้องการเล่นนะจ๊ะ</h2>
+        <button class="level-btn btn-k" onclick="selectLevel('K')">ระดับ อนุบาล</button>
+        <button class="level-btn btn-p" onclick="selectLevel('P')">ระดับ ประถม</button>
+    </div>
+
+    <div id="victory-overlay">
+        <h1 style="color:#2ECC71; font-size: 3em; text-align:center;">🎉 ถูกต้อง! 🎉</h1>
+        <div id="lang-box" style="color:white; font-size: 1.5em; text-align:center; margin: 20px; font-weight: bold;"></div>
+        <button class="level-btn btn-k" onclick="initGame()" style="width:200px; font-size:20px;">เล่นรอบใหม่</button>
+    </div>
+
+    <header>
+        <img src="logo.png" alt="โลโก้" class="school-logo" onerror="this.src='https://banmai.ac.th/wp-content/uploads/2023/06/cropped-logo-school.png'">
+        <div class="school-name">โรงเรียนบ้านใหม่วัฒนา</div>
+        <div class="teacher-info">ครูขันทอง โพธิ์เตี้ย | วิชาคอมพิวเตอร์</div>
+        <div class="game-title" id="mode-title">เกม นับ ไก่ ไข่ มหาสนุก</div>
+    </header>
+
+    <div id="game-area" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; width: 100%; max-width: 950px;">
+        <div class="game-card">
+            <div class="cloud-number" id="target-1">?</div>
+            <div class="spawner" onclick="addItem(1)"><img src="chicken.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1828/1828884.png'"></div>
+            <div class="zone-wrapper">
+                <div class="drop-zone" id="zone-1" style="background-image: url('coop.png');"></div>
+                <button class="btn-undo" onclick="removeItem(1)">❌</button>
+            </div>
+            <button class="btn-check" id="btn-1" onclick="checkAnswer(1)">✅ ตอบ</button>
+            <div id="fb-1" style="height:25px; margin-top:5px; font-weight:bold;"></div>
+        </div>
+
+        <div class="game-card">
+            <div class="cloud-number" id="target-2">?</div>
+            <div class="spawner" onclick="addItem(2)"><img src="egg.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2932/2932688.png'"></div>
+            <div class="zone-wrapper">
+                <div class="drop-zone" id="zone-2" style="background-image: url('nest.png');"></div>
+                <button class="btn-undo" onclick="removeItem(2)">❌</button>
+            </div>
+            <button class="btn-check" id="btn-2" onclick="checkAnswer(2)">✅ ตอบ</button>
+            <div id="fb-2" style="height:25px; margin-top:5px; font-weight:bold;"></div>
+        </div>
+    </div>
+
+    <div id="change-level-container">
+        <button class="btn-switch" onclick="location.reload()">🔄 เปลี่ยนระดับชั้น</button>
+    </div>
+
+    <script>
+        let currentMode = 'K', t1 = 0, t2 = 0, c1 = 0, c2 = 0, is1Correct = false, is2Correct = false;
+        let audioCtx;
+        const langData = {
+            0:{th:"ศูนย์",en:"Zero",cn:"Líng"}, 1:{th:"หนึ่ง",en:"One",cn:"Yī"}, 2:{th:"สอง",en:"Two",cn:"Èr"}, 
+            3:{th:"สาม",en:"Three",cn:"Sān"}, 4:{th:"สี่",en:"Four",cn:"Sì"}, 5:{th:"ห้า",en:"Five",cn:"Wǔ"}, 
+            6:{th:"หก",en:"Six",cn:"Liù"}, 7:{th:"เจ็ด",en:"Seven",cn:"Qī"}, 8:{th:"แปด",en:"Eight",cn:"Bā"}, 
+            9:{th:"เก้า",en:"Nine",cn:"Jiǔ"}, 10:{th:"สิบ",en:"Ten",cn:"Shí"}, 11:{th:"สิบเอ็ด",en:"Eleven",cn:"Shíyī"},
+            12:{th:"สิบสอง",en:"Twelve",cn:"Shíèr"}, 13:{th:"สิบสาม",en:"Thirteen",cn:"Shísān"}, 14:{th:"สิบสี่",en:"Fourteen",cn:"Shísì"}, 
+            15:{th:"สิบห้า",en:"Fifteen",cn:"Shíwǔ"}, 16:{th:"สิบหก",en:"Sixteen",cn:"Shíliù"}, 17:{th:"สิบเจ็ด",en:"Seventeen",cn:"Shíqī"}, 18:{th:"สิบแปด",en:"Eighteen",cn:"Shíbā"}
+        };
+
+        function playPop(freq) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            } catch(e) {}
+        }
+
+        function speak(text, lang) {
+            if(!window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = lang; u.rate = 0.9;
+            window.speechSynthesis.speak(u);
+        }
+
+        function selectLevel(lv) {
+            currentMode = lv;
+            document.getElementById('bgMusic').volume = 0.2;
+            document.getElementById('bgMusic').play().catch(()=>{});
+            speak('', 'th-TH');
+            document.getElementById('level-overlay').style.display = 'none';
+            document.getElementById('mode-title').innerText = (lv === 'K') ? "เกมนับ ไก่ ไข่ (ระดับอนุบาล)" : "เกมคณิตศาสตร์ (ระดับประถม)";
+            playPop(500);
+            initGame();
+        }
+
+        function initGame() {
+            document.getElementById('victory-overlay').style.display = 'none';
+            is1Correct = false; is2Correct = false;
+            document.getElementById('btn-1').disabled = false;
+            document.getElementById('btn-2').disabled = false;
+            c1 = 0; c2 = 0;
+            document.getElementById('zone-1').innerHTML = ''; document.getElementById('zone-2').innerHTML = '';
+            document.getElementById('fb-1').innerText = ''; document.getElementById('fb-2').innerText = '';
+            t1 = genProb(1); t2 = genProb(2);
+        }
+
+        function genProb(id) {
+            let el = document.getElementById('target-' + id);
+            if (currentMode === 'K') {
+                let n = Math.floor(Math.random() * 9) + 1;
+                el.innerText = n; return n;
+            } else {
+                let isPlus = Math.random() > 0.5;
+                if (isPlus) {
+                    let a = Math.floor(Math.random() * 5) + 1, b = Math.floor(Math.random() * 4) + 1;
+                    el.innerHTML = `<span style="font-size:18px">${a}+${b}</span><br>=?`; return a + b;
+                } else {
+                    let a = Math.floor(Math.random() * 5) + 5, b = Math.floor(Math.random() * 5);
+                    el.innerHTML = `<span style="font-size:18px">${a}-${b}</span><br>=?`; return a - b;
+                }
+            }
+        }
+
+        function addItem(n) {
+            if ((n === 1 && is1Correct) || (n === 2 && is2Correct)) return;
+            playPop(600);
+            const img = document.createElement('img');
+            img.src = (n === 1) ? 'chicken.png' : 'egg.png'; img.className = 'item-small';
+            img.onerror = function() { this.src = (n === 1) ? 'https://cdn-icons-png.flaticon.com/512/1828/1828884.png' : 'https://cdn-icons-png.flaticon.com/512/2932/2932688.png'; };
+            document.getElementById('zone-' + n).appendChild(img);
+            if (n === 1) c1++; else c2++;
+        }
+
+        function removeItem(n) {
+            if ((n === 1 && is1Correct) || (n === 2 && is2Correct)) return;
+            playPop(400);
+            const zone = document.getElementById('zone-' + n);
+            if (zone.lastChild) { zone.removeChild(zone.lastChild); if (n === 1) c1--; else c2--; }
+        }
+
+        function checkAnswer(n) {
+            let target = (n === 1) ? t1 : t2, current = (n === 1) ? c1 : c2;
+            let fb = document.getElementById('fb-' + n);
+            if (target === current) {
+                playPop(800);
+                fb.innerText = "🎉 ถูกต้อง!"; fb.style.color = "green";
+                if (n === 1) is1Correct = true; else is2Correct = true;
+                document.getElementById('btn-' + n).disabled = true;
+                speak("ถูกต้องครับ", "th-TH");
+                if (is1Correct && is2Correct) {
+                    setTimeout(() => {
+                        const d = langData[target];
+                        document.getElementById('lang-box').innerHTML = `ไทย: ${d.th} | English: ${d.en} | Chinese: ${d.cn}`;
+                        document.getElementById('victory-overlay').style.display = 'flex';
+                        // แสดงปุ่มเปลี่ยนระดับทันทีที่เล่นจบด่าน
+                        document.getElementById('change-level-container').style.display = 'block';
+                        
+                        speak(d.th, "th-TH");
+                        setTimeout(() => speak(d.en, "en-US"), 1500);
+                        setTimeout(() => speak(d.cn, "zh-CN"), 3000);
+                    }, 800);
+                }
+            } else {
+                playPop(200); fb.innerText = "❌ ลองใหม่นะ"; fb.style.color = "red";
+                speak("ยังไม่ถูกครับ", "th-TH");
+            }
+        }
+    </script>
+</body>
+</html>
